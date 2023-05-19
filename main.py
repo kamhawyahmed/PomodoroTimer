@@ -104,7 +104,7 @@ class App(tk.Tk):
             self.pomodoro_status = "long_break"
 
         if self.pomodoro_status == "work":
-            self.countdown_recursive(WORK_MIN)
+            self.countdown_recursive(WORK_MIN * 60)
             self.apply_work_effects()
         elif self.pomodoro_status == "break":
             self.countdown_recursive(SHORT_BREAK_MIN * 60)
