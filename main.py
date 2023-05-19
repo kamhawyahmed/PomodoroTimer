@@ -1,13 +1,13 @@
 import time
 import tkinter as tk
 from tkinter import ttk
-#TODO START GUI
 #colorhunt.co for color palettes
 PINK = "#e2979c"
 RED = "#e7305b"
 GREEN = "#9bdeac"
 YELLOW = "#f7f5dd"
 FONT_NAME = "Courier"
+NUMBER_OF_SESSIONS_BEFORE_LONG_BREAK = 4
 WORK_MIN = 25
 SHORT_BREAK_MIN = 5
 LONG_BREAK_MIN = 20
@@ -21,17 +21,17 @@ class App(tk.Tk):
         super().__init__()
         self.pomodoro_status = "work"
         self.work_counter = 0
-        self.attributes('-topmost',True)
         self.timer_running = False
-        self.set_window_geometry()
+        self.stop_signal = False
 
+        self.attributes('-topmost',True)
         self.title("Pomodoro Timer")
-        self.minsize(width=200, height=200)
+        self.minsize(width=200, height=220)
         self.config(padx=10, pady=10, bg=YELLOW)
         ttk.Style(self).theme_use('classic') #no effect on mac
-        # self.grid_columnconfigure(100)
+        self.set_window_geometry()
+
         self.create_widgets()
-        #TODO canvas positioning center and label etc.
     def set_window_geometry(self):
         w = 200  # width for the Tk root
         h = 220  # height for the Tk root
@@ -47,7 +47,7 @@ class App(tk.Tk):
         # and where it is placed
         self.geometry(f"{w}x{h}+{int(x)}+{int(y)}")
     def create_widgets(self):
-        self.button_start = tk.Button(text="Start Timer", command=self.pomodoro_countdown, highlightbackground=YELLOW)
+        self.button_start = tk.Button(text="Start Timer", command=self.pomodoro, highlightbackground=YELLOW)
         # self.button_start.pack(side="left")
         self.button_start.grid(column=0, row=1, pady= (0,10))
 
@@ -64,8 +64,6 @@ class App(tk.Tk):
         self.canvas.grid(column=0, columnspan=2, row=2)
         # Text Label
         self.label = tk.Label(text="25:00", font=("Arial", 40, "bold"), bg=YELLOW)
-        if self.pomodoro_status == "break":
-            self.label.config(fg=RED)
         # changing options - at init/as_dict/using.config fxn
         # my_label.config(text="New Label Text")
         # my_label.config(padx=25,pady=25)
@@ -82,35 +80,67 @@ class App(tk.Tk):
         if timer_length < 0:
             self.timer_running = False
             return
+        if self.stop_signal:
+            self.stop_signal = False
+            self.timer_running = False
+            return
 
         minutes, seconds = convert_seconds_to_minutes(timer_length)
         self.label["text"] = f"{minutes}:{seconds}"
         self.after(1000, self.countdown_recursive, timer_length - 1)
 
 
-    def pomodoro_countdown(self):
+    def pomodoro(self):
         #TODO change text color based on status red - work, green - break or long break
-        #TODO have skip to next timer if button pressed again
+        #TODO have skip to next timer if button pressed while timer running
+        self.update_checkmarks()
         print(self.pomodoro_status)
+        self.stop_signal = False
         if self.timer_running:
-            print("timer in progress")
-        self.timer_running = True
+            self.stop_signal = True
 
-        if self.work_counter == 4:
-            self.pomodoro_status = "long break"
-            self.countdown_recursive(LONG_BREAK_MIN * 60)
-            self.work_counter = 0
-            self.pomodoro_status = "work"
-        elif self.pomodoro_status == "work":
-            self.countdown_recursive(2)
-            self.work_counter += 1
-            self.pomodoro_status = "break"
+        self.timer_running = True
+        if self.work_counter % NUMBER_OF_SESSIONS_BEFORE_LONG_BREAK == 0 and self.work_counter != 0:
+            self.pomodoro_status = "long_break"
+
+        if self.pomodoro_status == "work":
+            self.countdown_recursive(WORK_MIN)
+            self.apply_work_effects()
         elif self.pomodoro_status == "break":
             self.countdown_recursive(SHORT_BREAK_MIN * 60)
-            self.pomodoro_status = "work"
+            self.apply_break_effects()
+        elif self.pomodoro_status == "long_break":
+            self.countdown_recursive(LONG_BREAK_MIN * 60)
+            self.apply_long_break_effects()
         else:
             raise NameError("Pomodoro status not set correctly.")
+
+    def update_checkmarks(self):
+        self.label_checkmarks["text"] = ""
+        for i in range(self.work_counter):
+            self.label_checkmarks["text"] += "✓"
+            if i % 5 == 0 and i != 0:
+                self.label_checkmarks["text"] += "\n"
+    def apply_work_effects(self):
+        self.label["fg"] = RED
+        self.work_counter += 1
+        self.pomodoro_status = "break"
+        return
+    def apply_break_effects(self):
+        self.label["fg"] = GREEN
+        self.pomodoro_status = "work"
+        return
+    def apply_long_break_effects(self):
+        self.label["fg"] = GREEN
+        self.work_counter += 1
+        self.pomodoro_status = "work"
+        return
+
     def reset(self):
+        self.stop_signal = True
+        self.work_counter = 0
+        self.pomodoro_status = "work"
+        self.label.config(text="25:00", fg="black")
         return
 
 
@@ -127,10 +157,4 @@ class App(tk.Tk):
 if __name__ == "__main__":
     app = App()
     app.mainloop()
-
-#TODO GUI BUTTONS (RESPONSES TO PRESS)
-
-#TODO TIMER
-
-#TODO MAKE PRETTY
 
