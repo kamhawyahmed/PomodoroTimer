@@ -91,8 +91,9 @@ class App(tk.Tk):
 
 
     def pomodoro(self):
-        #TODO change text color based on status red - work, green - break or long break
         #TODO have skip to next timer if button pressed while timer running
+        #TODO add text formatting
+
         self.update_checkmarks()
         print(self.pomodoro_status)
         self.stop_signal = False
@@ -116,6 +117,7 @@ class App(tk.Tk):
             raise NameError("Pomodoro status not set correctly.")
 
     def update_checkmarks(self):
+        #TODO fix first 6 works => 6 checkmarks
         self.label_checkmarks["text"] = ""
         for i in range(self.work_counter):
             self.label_checkmarks["text"] += "✓"
