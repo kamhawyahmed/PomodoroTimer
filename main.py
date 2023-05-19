@@ -20,7 +20,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.pomodoro_status = "work"
-        self.work_counter = 0
+        self.work_counter = 1
         self.timer_running = False
         self.stop_signal = False
 
@@ -63,7 +63,7 @@ class App(tk.Tk):
         # self.canvas.pack(side="top")
         self.canvas.grid(column=0, columnspan=2, row=2)
         # Text Label
-        self.label = tk.Label(text="25:00", font=("Arial", 40, "bold"), bg=YELLOW)
+        self.label = tk.Label(text="25:00", font=("Arial", 40, "bold"), bg=YELLOW, fg= "black")
         # changing options - at init/as_dict/using.config fxn
         # my_label.config(text="New Label Text")
         # my_label.config(padx=25,pady=25)
@@ -93,9 +93,9 @@ class App(tk.Tk):
     def pomodoro(self):
         #TODO have skip to next timer if button pressed while timer running
         #TODO add text formatting
+        #TODO debug number of sessions before long break - currently 3 work before break - track counter and debug thanks!
 
         self.update_checkmarks()
-        print(self.pomodoro_status)
         self.stop_signal = False
         if self.timer_running:
             self.stop_signal = True
@@ -103,6 +103,7 @@ class App(tk.Tk):
         self.timer_running = True
         if self.work_counter % NUMBER_OF_SESSIONS_BEFORE_LONG_BREAK == 0 and self.work_counter != 0:
             self.pomodoro_status = "long_break"
+        print(self.pomodoro_status)
 
         if self.pomodoro_status == "work":
             self.countdown_recursive(WORK_MIN * 60)
@@ -117,11 +118,10 @@ class App(tk.Tk):
             raise NameError("Pomodoro status not set correctly.")
 
     def update_checkmarks(self):
-        #TODO fix first 6 works => 6 checkmarks
         self.label_checkmarks["text"] = ""
         for i in range(self.work_counter):
             self.label_checkmarks["text"] += "✓"
-            if i % 5 == 0 and i != 0:
+            if i % NUMBER_OF_SESSIONS_BEFORE_LONG_BREAK == 0:
                 self.label_checkmarks["text"] += "\n"
     def apply_work_effects(self):
         self.label["fg"] = RED
@@ -141,6 +141,7 @@ class App(tk.Tk):
     def reset(self):
         self.stop_signal = True
         self.work_counter = 0
+        self.update_checkmarks()
         self.pomodoro_status = "work"
         self.label.config(text="25:00", fg="black")
         return
