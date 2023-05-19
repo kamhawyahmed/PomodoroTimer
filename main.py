@@ -91,7 +91,7 @@ class App(tk.Tk):
 
 
     def pomodoro(self):
-        #TODO change text color based on status red - work, green - break or long break
+        #TODO Fix long break timing prob just start at 1 and go up idk
         #TODO have skip to next timer if button pressed while timer running
         self.update_checkmarks()
         print(self.pomodoro_status)
@@ -104,7 +104,7 @@ class App(tk.Tk):
             self.pomodoro_status = "long_break"
 
         if self.pomodoro_status == "work":
-            self.countdown_recursive(WORK_MIN)
+            self.countdown_recursive(WORK_MIN*60)
             self.apply_work_effects()
         elif self.pomodoro_status == "break":
             self.countdown_recursive(SHORT_BREAK_MIN * 60)
@@ -117,7 +117,7 @@ class App(tk.Tk):
 
     def update_checkmarks(self):
         self.label_checkmarks["text"] = ""
-        for i in range(self.work_counter):
+        for i in range(1,self.work_counter + 1,1):
             self.label_checkmarks["text"] += "✓"
             if i % 5 == 0 and i != 0:
                 self.label_checkmarks["text"] += "\n"
