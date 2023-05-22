@@ -84,6 +84,7 @@ class App(tk.Tk):
 
 
     def countdown_recursive(self, timer_length, id_number, original_timer_length):
+        #for future reference - can assign recursive function to name and use tk.window.after_cancel to cancel
         self.timer_running = True
         if timer_length < 0:
             self.timer_running = False
