@@ -172,6 +172,7 @@ class App(tk.Tk):
         full_reset = self.number_of_consecutive_reset_clicks == 2
         soft_reset = not full_reset
         if full_reset:
+            self.destroy()
             self.__init__()
         elif soft_reset:
             self.highest_timer_running += 1
