@@ -106,6 +106,7 @@ class App(tk.Tk):
     def pomodoro_button_pressed(self):
         #the levels of this function are mismatched - update checkmarks
         # #consecutivereset should be in different place than work timer and work effects
+        long_break_is_due = self.work_counter % NUMBER_OF_SESSIONS_BEFORE_LONG_BREAK == 0
         self.update_checkmarks()
         self.number_of_consecutive_reset_clicks = 0
 
@@ -123,7 +124,7 @@ class App(tk.Tk):
             # old_timer_should_stop = True
         self.pomodoro_timer(self.pomodoro_status)
         self.apply_extra_effects(self.pomodoro_status)
-        self.pomodoro_status = self.cycle_pomdoro_status(self.pomodoro_status, self.work_counter % NUMBER_OF_SESSIONS_BEFORE_LONG_BREAK == 0)
+        self.pomodoro_status = self.cycle_pomdoro_status(self.pomodoro_status, long_break_is_due)
     def pomodoro_timer(self, timer_type):
         if timer_type == "work":
             self.countdown_recursive(WORK_MIN * 60, self.highest_timer_running, WORK_MIN * 60)
