@@ -4,6 +4,8 @@ import tkinter as tk
 from tkinter import ttk
 import os
 import database_module as db
+import socket
+import discordAPI
 #colorhunt.co for color palettes
 PINK = "#e2979c"
 RED = "#e7305b"
@@ -29,9 +31,9 @@ WORK_MIN = 25
 SHORT_BREAK_MIN = 5
 LONG_BREAK_MIN = 20
 
-#for pyinstaller deployment of images - use resource_path(filename) instead of file names
-#- adding image as data file not working for me but making mac apps so can just add to MacOS folder in package contents
 def resource_path(relative_path):
+    # for pyinstaller deployment of images - use resource_path(filename) instead of file names
+    # - adding image as data file not working for me but making mac apps so can just add to MacOS folder in package contents
     try:
         base_path = sys._MEIPASS
     except Exception:
@@ -52,6 +54,9 @@ class App(tk.Tk):
         self.highest_timer_running = 0 #actually starts at 1, incrementation before implementation
         self.number_of_consecutive_reset_clicks = 0
         self.previous_pomodoro_status = ""
+
+        self.discordClient = discordAPI.MyClient(intents=discordAPI.INTENTS)
+
         self.db = db.DatabaseManager() #poor form - copying meditechprinter aidan but wtv
 
         self.start_time = None
@@ -85,6 +90,7 @@ class App(tk.Tk):
         self.geometry(f"{w}x{h}+{int(x)}+{int(y)}")
 
     def set_window_position_middle(self):
+        print("mid")
         w = WIDTH_PROGRAM  # width for the Tk root
         h = 220  # height for the Tk root
 
@@ -101,10 +107,10 @@ class App(tk.Tk):
     def create_widgets(self):
         #TODO STOP ADDING PREFERENCES AS TODO
 
-        # self.button_test = tk.Button(text="TEST", command=self.pause_unpause_button_pressed, highlightbackground=YELLOW, )
-        # self.button_test.grid(column=0, row=TEST_ROW)
+        # self.button_test = tk.Button(text="TEST", command=self.send_discord_notification, highlightbackground=YELLOW, )
+        # self.button_test.grid(column=1, row=TEST_ROW)
         # self.button_test2 = tk.Button(text="TEST", command=self.unpause_timer, highlightbackground=YELLOW, )
-        # self.button_test2.grid(column=1, row=TEST_ROW)
+        # self.button_test2.grid(column=0, row=TEST_ROW)
 
         self.button_pause = tk.Button(text="Pause", command=self.pause_unpause_button_pressed, highlightbackground=YELLOW, )
         self.button_pause.grid(column=1, row=SECOND_ROW, pady= (0,10))
@@ -163,6 +169,7 @@ class App(tk.Tk):
                                               "Original_Timer_Length": original_timer_length}
         if timer_length_seconds < 0:
             self.set_window_position_middle()
+            self.current_timer_characteristics = {}
             self.update_checkmarks()
             self.timer_running = False
             return
@@ -197,7 +204,9 @@ class App(tk.Tk):
         # #consecutivereset should be in different place than work timer and work effects
         self.set_window_geometry_bottom_right()
         self.update_checkmarks()
+
         self.number_of_consecutive_reset_clicks = 0
+        self.button_reset.config(foreground="black")
         self.unpause_timer()
 
 
@@ -277,6 +286,7 @@ class App(tk.Tk):
 
     def pause_unpause_button_pressed(self):
         self.number_of_consecutive_reset_clicks = 0
+        self.button_reset.config(foreground="black")
         if not self.paused:
             self.pause_timer()
         else:
@@ -285,16 +295,20 @@ class App(tk.Tk):
     def pause_timer(self):
         self.paused = True
         self.label["fg"] = "white"
+        self.button_pause["fg"] = SKY_BLUE
+        self.set_window_position_middle()
         return
     def unpause_timer(self):
         print(self.current_timer_characteristics)
         self.paused = False
         self.label["fg"] = "black"
+        self.button_pause["fg"] = "black"
         self.highest_timer_running += 1
         if self.current_timer_characteristics:
             self.countdown_recursive(self.current_timer_characteristics["Timer_Length"], self.highest_timer_running,
                                     self.current_timer_characteristics["Original_Timer_Length"])
         self.current_timer_characteristics = []
+        self.set_window_geometry_bottom_right()
         return
 
 
@@ -302,25 +316,35 @@ class App(tk.Tk):
         # soft reset - time of current session reset to start
         # or full reset (click reset twice in row) - reset of full module
         self.number_of_consecutive_reset_clicks += 1
-        full_reset = self.number_of_consecutive_reset_clicks == 2
-        soft_reset = not full_reset
-        if full_reset:
+        full_reset_condition_met = self.number_of_consecutive_reset_clicks == 2
+        soft_reset_condition_met = not full_reset_condition_met
+        if full_reset_condition_met:
             self.collect_end_data()
             self.save_all_data_to_csv()
             self.destroy()
             self.__init__()
-        elif soft_reset:
+        elif soft_reset_condition_met:
             self.unpause_timer()
             self.highest_timer_running += 1
             self.pomodoro_timer(self.previous_pomodoro_status)
             self.pause_timer()
+            self.button_reset.config(foreground=RED)
         return
     def collect_end_data(self):
         self.db.data["Sessions_Worked"] = self.work_counter
-        self.db.data["Minutes_Worked"] = self.work_counter * WORK_MIN
         self.db.data["End_Time"] = dt.datetime.now()
+        self.db.data["Length_Of_Session"] = dt.datetime.now() - self.db.data["Start_Time"]
+        self.db.data["Computer_Name"] = socket.gethostname()
+
+
     def save_all_data_to_csv(self):
         self.db.append_memory_to_csv()
+
+    def send_discord_notification(self):
+        # works once then session closed
+        #  time to learn how to parallelize
+        self.discordClient.run('MTE0ODI2ODM5OTAzODgyODYyNQ.GqAn3o.vk1_BPiB6xeKGO8PDouX4mIhI8d-irbLSxNslE')
+
 
 
 
@@ -329,4 +353,5 @@ class App(tk.Tk):
 if __name__ == "__main__":
     app = App()
     app.mainloop()
+
 

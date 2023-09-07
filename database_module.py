@@ -1,18 +1,17 @@
 import pandas
 
 # pomodorotimer
-# TODO record:
-# TODO time started
-# TODO time ended
+
 
 
 class DatabaseManager():
     def __init__(self):
         # template - not strictly limited to this though
         self.data = {
-            "hi" : ["hi"], # STRUCTURAL HI DO NOT REMOVE
+            "hi" : ["hi"], #STRUCTURAL HI DO NOT REMOVE
+            "Computer_Name" : [],
             "Sessions_Worked" : [],
-            "Minutes_Worked" : [],
+            "Length_Of_Session" : [],
             "Start_Time" : [],
             "End_Time": [],
         }
